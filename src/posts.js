@@ -22,6 +22,25 @@ class Posts {
     })
     this.subscription.setEventFilters(['/restapi/v1.0/account/~/extension/~/glip/posts']).register()
   }
+
+  webhook(options) {
+    return this.rc.platform().post('/subscription', {
+      eventFilters: [
+        "/restapi/v1.0/account/~/extension/~/glip/posts"
+      ],
+      deliveryMode: {
+        transportType: options.delivery_mode_transport_type,
+        address: options.delivery_mode_address
+      }
+    }).then(function (response) {
+      console.log('Subscription Response: ', response.json());
+    }).catch(function (e) {
+      console.error(e);
+      throw e;
+    });
+  }
+
+
 }
 
 module.exports = Posts

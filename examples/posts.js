@@ -15,18 +15,29 @@ gc.authorize({
 }).then((response) => {
   console.log('logged in')
 
-  gc.posts().subscribe((message) => {
-    if (message.messageType === 'PostAdded') { // receive new messages
-      console.log(message)
-      if (message.post.text === 'ping') {
-        gc.posts().post({ groupId: message.post.groupId, text: 'pong' }).then((response) => { // send message
-          console.log(response)
-        })
+
+  if(process.env.ENABLE_WEBHOOKS) {
+    console.log("In Webhooks")
+    gc.posts().webhook({
+      delivery_mode_transport_type: process.env.DELIVERY_MODE_TRANSPORT_TYPE,
+      delivery_mode_address: process.env.DELIVERY_MODE_ADDRESS
+    }).then((response) => {
+      console.log(response)
+    })
+  } else {
+    gc.posts().subscribe((message) => {
+      if (message.messageType === 'PostAdded') { // receive new messages
+        console.log(message)
+        if (message.post.text === 'ping') {
+          gc.posts().post({ groupId: message.post.groupId, text: 'pong' }).then((response) => { // send message
+            console.log(response)
+          })
+        }
+      } else { // other message events, such as PostChanged and PostRemoved
+        console.log(message)
       }
-    } else { // other message events, such as PostChanged and PostRemoved
-      console.log(message)
-    }
-  })
+    })
+  }
 
   gc.posts().get({ groupId: process.env.GROUP }).then((response) => { // get messages by group id
     console.log(`${response.records.length} posts were found.`)

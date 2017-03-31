@@ -2,7 +2,7 @@ require('dotenv').config()
 const GlipClient = require('../src/glip-client')
 
 const gc = new GlipClient({
-  server: process.env.SERVER,
+  server: process.env.APP_SERVER_URL,
   appKey: process.env.APP_KEY,
   appSecret: process.env.APP_SECRET,
   appName: 'My Glip Client',
@@ -56,11 +56,25 @@ gc.authorize({
     console.log(response);
   });
 
-  gc.posts().post({ groupId: message.post.groupId, text: 'pong' }).then((response) => { // send message
-    console.log(response)
-  })
 
-  gc.groups().subscribe((message) => { // monitor group events, such as GroupAdded, GroupChanged and GroupRemoved
-    console.log(message)
-  })
+
+  if(process.env.ENABLE_WEBHOOKS) {
+    console.log("In Webhooks")
+    gc.groups().webhook({
+      delivery_mode_transport_type: process.env.DELIVERY_MODE_TRANSPORT_TYPE,
+      delivery_mode_address: process.env.DELIVERY_MODE_ADDRESS
+    }).then((response) => {
+      console.log(response)
+    })
+  } else
+  {
+    console.log("In Subscription")
+    gc.groups().subscribe((message) => { // monitor group events, such as GroupAdded, GroupChanged and GroupRemoved
+      console.log(message)
+    })
+  }
+
+
+}). catch(function (err) {
+  console.log(err)
 })
